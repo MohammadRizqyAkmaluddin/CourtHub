@@ -11,7 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        //
+        Schema::create('regions', function(Blueprint $table) {
+            $table->id();
+            $table->string('city');
+            $table->string('province');
+            $table->timestamps();
+
+            $table->engine = 'InnoDB';
+        });
     }
 
     /**

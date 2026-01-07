@@ -11,13 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('users', function(Blueprint $table) {
+        Schema::create('venues', function(Blueprint $table) {
             $table->id();
-            $table->string('name', 50);
+            $table->foreignId('region_id')->constrained()->restrictOnDelete();
+            $table->string('name');
             $table->string('email')->unique();
             $table->string('password');
-            $table->integer('phone');
-            $table->string('profile_image')->nullable();
+            $table->string('address');
+            $table->string('logo')->nullable();
+            $table->string('cover')->nullable();
             $table->timestamps();
 
             $table->engine = 'InnoDB';
