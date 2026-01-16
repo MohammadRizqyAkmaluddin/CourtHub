@@ -2,19 +2,37 @@
 
 namespace App\Models;
 
+use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 
 class Venue extends Authenticatable
 {
-    use HasFactory;
+    use HasApiTokens, HasFactory;
 
-    protected $fillable = ['name', 'region_id', 'email', 'password', 'address', 'logo', 'cover'];
+    protected $table = 'venues';
+
+    protected $fillable = ['name', 'city_id', 'email', 'password', 'address', 'logo', 'cover'];
 
     protected $hidden = ['password'];
 
-    public function region() {
-        return $this->belongsTo(Region::class);
+    public function city() {
+        return $this->belongsTo(City::class);
+    }
+    public function operationHour() {
+        return $this->hasOne(OperationHour::class);
+    }
+    public function reservationTerm() {
+        return $this->hasOne(ReservationTerm::class);
+    }
+    public function facility() {
+        return $this->hasMany(Facility::class);
+    }
+    public function court() {
+        return $this->hasMany(Court::class);
+    }
+    public function courtBooking() {
+        return $this->hasMany(CourtBooking::class);
     }
 }

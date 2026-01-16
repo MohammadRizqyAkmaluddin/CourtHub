@@ -11,13 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('regions', function(Blueprint $table) {
+        Schema::create('court_materials', function(Blueprint $table) {
             $table->id();
-            $table->string('city');
-            $table->string('province');
-            $table->timestamps();
-
-            $table->engine = 'InnoDB';
+            $table->enum('material_type', ['Hard Court', 'Clay Court', 'Grass Court'])->default('Hard Court');
         });
     }
 

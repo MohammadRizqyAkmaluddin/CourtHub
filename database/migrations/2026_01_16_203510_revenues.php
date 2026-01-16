@@ -11,16 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('users', function(Blueprint $table) {
-            $table->id();
-            $table->string('name', 50);
-            $table->string('email')->unique();
-            $table->string('password');
-            $table->string('phone');
-            $table->string('profile_image')->nullable();
+        Schema::create('revenues', function(Blueprint $table){
+            $table->foreignId('transaction_id')->primary()->constrained();
+            $table->integer('venue_share');
+            $table->integer('platform_share');
+            $table->enum('status', ['Success', 'Pending'])->default('Pending');
             $table->timestamps();
-
-            $table->engine = 'InnoDB';
         });
     }
 

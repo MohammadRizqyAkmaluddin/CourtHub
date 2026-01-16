@@ -11,16 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('users', function(Blueprint $table) {
+        Schema::create('courts', function(Blueprint $table) {
             $table->id();
+            $table->foreignId('venue_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('sport_type_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('court_type_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('court_material_id')->constrained()->cascadeOnDelete();
             $table->string('name', 50);
-            $table->string('email')->unique();
-            $table->string('password');
-            $table->string('phone');
-            $table->string('profile_image')->nullable();
-            $table->timestamps();
-
-            $table->engine = 'InnoDB';
+            $table->integer('price');
         });
     }
 

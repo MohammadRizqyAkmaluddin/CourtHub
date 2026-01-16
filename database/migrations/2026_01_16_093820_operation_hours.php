@@ -11,16 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('users', function(Blueprint $table) {
+        Schema::create('operation_hours', function (Blueprint $table) {
             $table->id();
-            $table->string('name', 50);
-            $table->string('email')->unique();
-            $table->string('password');
-            $table->string('phone');
-            $table->string('profile_image')->nullable();
+            $table->foreignId('venue_id')->constrained()->cascadeOnDelete();
+            $table->tinyInteger('day_of_week');
+            $table->time('open_time')->nullable();
+            $table->time('close_time')->nullable();
+            $table->boolean('is_closed')->default(false);
             $table->timestamps();
 
-            $table->engine = 'InnoDB';
+            $table->unique(['venue_id', 'day_of_week']);
         });
     }
 

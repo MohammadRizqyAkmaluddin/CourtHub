@@ -11,16 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('users', function(Blueprint $table) {
+        Schema::create('court_images', function(Blueprint $table) {
             $table->id();
-            $table->string('name', 50);
-            $table->string('email')->unique();
-            $table->string('password');
-            $table->string('phone');
-            $table->string('profile_image')->nullable();
-            $table->timestamps();
-
-            $table->engine = 'InnoDB';
+            $table->foreignId('court_id')->constrained()->cascadeOnDelete();
+            $table->string('image');
         });
     }
 
