@@ -13,7 +13,7 @@ class Venue extends Authenticatable
 
     protected $table = 'venues';
 
-    protected $fillable = ['name', 'city_id', 'email', 'password', 'description', 'rules', 'address', 'bank_account_number'];
+    protected $fillable = ['name', 'city_id', 'email', 'password', 'phone', 'description', 'rules', 'address', 'bank_account_number'];
 
     protected $hidden = ['password'];
 
