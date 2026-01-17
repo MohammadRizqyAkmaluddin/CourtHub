@@ -13,8 +13,8 @@ class VenueAuthController extends Controller
     {
         $data = $request->validate([
             'name'          => 'required|string|max:100',
-            'city_id'       => 'required|exists:regions,id',
-            'email'         => 'required|email|unique:values,email',
+            'city_id'       => 'required|exists:cities,id',
+            'email'         => 'required|email|unique:venues,email',
             'password'      => 'required|min:8',
             'phone'         => 'required|max:15',
             'description'   => 'required|string',
@@ -26,14 +26,22 @@ class VenueAuthController extends Controller
         $data['password'] = Hash::make($data['password']);
         $venue = Venue::create($data);
 
+        $token = $venue->createToken('venue-token')->plainTextToken;
+
         return response()->json([
             'message'   => 'Venue registered succesfully',
+            'token'     => $token,
             'venue'     => $venue
         ], 201);
     }
 
     public function login(Request $request)
     {
+        $request->validate([
+            'email'     => 'required|email',
+            'password'  => 'required'
+        ]);
+
         $venue = Venue::where('email', $request->email)->first();
 
         if(!$venue || !Hash::check($request->password, $venue->password)) {
@@ -44,7 +52,16 @@ class VenueAuthController extends Controller
 
         return response()->json([
             'token' => $token,
-            'venue' => $venue
+            'venue' => $venue->only('id','name','email','city_id')
+        ]);
+    }
+
+    public function logout(Request $request)
+    {
+        $request->user()->currentAccessToken()->delete();
+
+        return response()->json([
+            'message' => 'Logged out'
         ]);
     }
 }
