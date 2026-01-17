@@ -12,11 +12,15 @@ class VenueAuthController extends Controller
     public function register(Request $request)
     {
         $data = $request->validate([
-            'name'      => 'required|string|max:100',
-            'region_id' => 'required|exists:regions,id',
-            'email'     => 'required|email|unique:values,email',
-            'password'  => 'required|min:8',
-            'address'   => 'required|string'
+            'name'          => 'required|string|max:100',
+            'city_id'       => 'required|exists:regions,id',
+            'email'         => 'required|email|unique:values,email',
+            'password'      => 'required|min:8',
+            'phone'         => 'required|max:15',
+            'description'   => 'required|string',
+            'rules'         => 'required|string',
+            'address'       => 'required|string',
+            'bank_account'  => 'nullable|string'
         ]);
 
         $data['password'] = Hash::make($data['password']);

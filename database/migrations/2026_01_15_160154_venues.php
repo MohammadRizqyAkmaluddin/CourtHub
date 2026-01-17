@@ -17,10 +17,11 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->unique();
             $table->string('password');
-            $table->string('description');
+            $table->string('phone');
+            $table->text('description');
+            $table->text('rules');
             $table->string('address');
-            $table->integer('bank_account_number')->nullable();
-            $table->string('logo')->nullable();
+            $table->string('bank_account')->nullable();
             $table->timestamps();
 
             $table->engine = 'InnoDB';
@@ -30,5 +31,5 @@ return new class extends Migration
     public function down(): void
     {
     }
-    
+
 };
