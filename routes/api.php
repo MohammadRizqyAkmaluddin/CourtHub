@@ -1,12 +1,14 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
 use App\Http\Controllers\Api\RegionController;
 use App\Http\Controllers\Api\UserAuthController;
 use App\Http\Controllers\Api\VenueAuthController;
 use App\Http\Controllers\Api\VenueController;
 
 Route::get('regions', [RegionController::class, 'index']);
+Route::get('venues', [VenueController::class, 'index']);
 
 Route::prefix('auth/venue')->group(function () {
     Route::post('register', [VenueAuthController::class, 'register']);
@@ -15,12 +17,20 @@ Route::prefix('auth/venue')->group(function () {
 
 Route::prefix('auth/user')->group(function () {
     Route::post('register', [UserAuthController::class, 'register']);
-    Route::post('/login', [UserAuthController::class, 'login']);
+    Route::post('login', [UserAuthController::class, 'login']);
 });
 
-Route::get('venues', [VenueController::class, 'index']);
+Route::middleware('auth:sanctum')->group(function () {
 
-Route::middleware('auth:venue')->group(function () {
-    Route::get('venue/me', [VenueController::class, 'me']);
-    Route::put('venue/profile', [VenueController::class, 'update']);
+    Route::get('auth/user/me', function (Request $request) {
+        return response()->json([
+            'user' => $request->user()
+        ]);
+    });
+
+    Route::get('auth/venue/me', function (Request $request) {
+        return response()->json([
+            'venue' => $request->user()
+        ]);
+    });
 });

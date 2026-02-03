@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Venue;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class VenueController extends Controller
 {
@@ -25,21 +26,11 @@ class VenueController extends Controller
     // AUTH: VENUE
     public function me(Request $request)
     {
-        return response()->json($request->user());
-    }
-
-    public function update(Request $request)
-    {
-        $venue = $request->user();
-
-        $venue->update(
-            $request->only('name','address','logo','cover')
-        );
-
         return response()->json([
-            'message' => 'Profile updated',
-            'venue'   => $venue,
+            'data' => $request->user('venue')
         ]);
     }
+
+
 }
 

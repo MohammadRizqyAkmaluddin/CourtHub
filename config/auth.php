@@ -78,7 +78,7 @@ return [
         ],
         'venues' => [
             'driver' => 'eloquent',
-            'model'  > App\Models\Venue::class,
+            'model' => App\Models\Venue::class,
         ],
         'admin' => [
             'driver' => 'eloquent',

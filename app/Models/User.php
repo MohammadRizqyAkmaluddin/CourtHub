@@ -7,12 +7,13 @@ use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
-    protected $fillable = ['name', 'email', 'password', 'phone', 'city', 'profile_image'];
+    protected $fillable = ['name', 'email', 'password', 'phone', 'profile_image'];
 
     protected $hidden = ['password'];
 
@@ -22,5 +23,17 @@ class User extends Authenticatable
     public function city() {
         return $this->belongsTo(City::class);
     }
+
+    protected $appends = ['profile_image_url'];
+
+    public function getProfileImageUrlAttribute()
+    {
+        if ($this->profile_image) {
+            return asset('storage/profile/' . $this->profile_image);
+        }
+
+        return asset('storage/profile/empty.jpg');
+    }
+
 }
 

@@ -47,4 +47,9 @@ class VenueAuthController extends Controller
             'venue' => $venue
         ]);
     }
+
+    public function profile(Request $request)
+    {
+        return response()->json($request->user());
+    }
 }

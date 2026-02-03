@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             CitySeeder::class,
             UserSeeder::class,
             VenueSeeder::class,
+            venueImageSeeder::class,
             CourtMaterialSeeder::class,
             AdditionalTypeSeeder::class,
             SportTypeSeeder::class,
