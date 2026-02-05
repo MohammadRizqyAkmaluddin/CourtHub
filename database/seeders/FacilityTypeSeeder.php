@@ -15,7 +15,7 @@ class FacilityTypeSeeder extends Seeder
     {
         DB::table('facility_types')->insert([
             ['type' => 'Prayer Room'],
-            ['type' => 'Food & Beverage'],
+            ['type' => 'Cafe & Resto'],
             ['type' => 'Car Parking'],
             ['type' => 'Motorbike Parking'],
             ['type' => 'Wi-Fi'],
@@ -23,7 +23,11 @@ class FacilityTypeSeeder extends Seeder
             ['type' => 'Sport Store'],
             ['type' => 'Changing Room'],
             ['type' => 'Shower'],
-            ['type' => 'Private Meeting Room'],
+            ['type' => 'Hot Shower'],
+            ['type' => 'Sauna'],
+            ['type' => 'Drink'],
+            ['type' => 'Food'],
+            ['type' => 'Tribune']
         ]);
     }
 }

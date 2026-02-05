@@ -25,7 +25,10 @@ class SportTypeSeeder extends Seeder
             ['type' => 'Golf'],
             ['type' => 'Baseball'],
             ['type' => 'Softball'],
-            ['type' => 'Table Tennis']
+            ['type' => 'Swimming Pool'],
+            ['type' => 'Pilates'],
+            ['type' => 'Yoga'],
+            ['type' => 'Shooting Range'],
         ]);
     }
 }

@@ -23,6 +23,8 @@ class DatabaseSeeder extends Seeder
             SportTypeSeeder::class,
             CourtTypeSeeder::class,
             FacilityTypeSeeder::class,
+            FacilitySeeder::class,
+            CourtSeeder::class
         ]);
     }
 }

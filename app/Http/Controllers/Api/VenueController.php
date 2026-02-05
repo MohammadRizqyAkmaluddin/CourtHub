@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
@@ -9,21 +8,58 @@ use Illuminate\Support\Facades\Auth;
 
 class VenueController extends Controller
 {
-    // PUBLIC
     public function index(Request $request)
     {
-        $query = Venue::with('region:id,city');
+        $perPage = $request->get('per_page', 12);
 
-        if ($request->region_id) {
-            $query->where('region_id', $request->region_id);
+        $query = Venue::with([
+            'city:id,city,province',
+            'images:id,venue_id,image',
+            'court' => function ($q) {
+                $q->select(
+                    'id',
+                    'venue_id',
+                    'sport_type_id',
+                    'name',
+                    'price',
+                    'image'
+                )
+                ->with([
+                    'sportType:id,type'
+                ]);
+            }
+        ])
+        ->withCount('court')
+        ->withMin('court', 'price');
+
+        if ($request->filled('search')) {
+            $query->where('name', 'LIKE', '%' . $request->search . '%');
         }
 
-        return response()->json(
-            $query->select('id','name','region_id','logo')->get()
-        );
+        if ($request->filled('city_id')) {
+            $query->where('city_id', $request->city_id);
+        }
+
+        if ($request->filled('sport_type_id')) {
+            $query->whereHas('court', function ($q) use ($request) {
+                $q->where('sport_type_id', $request->sport_type_id);
+            });
+        }
+
+        return response()->json($query->paginate($perPage));
     }
 
-    // AUTH: VENUE
+    public function show(Venue $venue)
+    {
+        $venue->load([
+            'city:id,city,province',
+            'images:id,venue_id,image',
+            'court.sportType:id,type'
+        ]);
+
+        return response()->json($venue);
+    }
+
     public function me(Request $request)
     {
         return response()->json([

@@ -34,6 +34,5 @@ class User extends Authenticatable
 
         return asset('storage/profile/empty.jpg');
     }
-
 }
 

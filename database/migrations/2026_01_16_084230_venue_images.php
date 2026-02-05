@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('venue_id')->constrained()->cascadeOnDelete();
             $table->string('image');
-            
             $table->engine = 'InnoDB';
         });
     }

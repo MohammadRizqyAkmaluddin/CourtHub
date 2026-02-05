@@ -19,6 +19,8 @@ return new class extends Migration
             $table->foreignId('court_material_id')->constrained()->cascadeOnDelete();
             $table->string('name', 50);
             $table->integer('price');
+            $table->string('image')->nullable();
+            $table->engine = 'InnoDB';
         });
     }
 

@@ -11,10 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-         Schema::create('facilities', function(Blueprint $table) {
+        Schema::create('facilities', function(Blueprint $table) {
             $table->id();
             $table->foreignId('venue_id')->constrained()->cascadeOnDelete();
             $table->foreignId('facility_type_id')->constrained()->cascadeOnDelete();
+            $table->engine = 'InnoDB';
         });
     }
 

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\LookupController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Api\RegionController;
@@ -7,8 +8,10 @@ use App\Http\Controllers\Api\UserAuthController;
 use App\Http\Controllers\Api\VenueAuthController;
 use App\Http\Controllers\Api\VenueController;
 
-Route::get('regions', [RegionController::class, 'index']);
+Route::get('sport-types', [LookupController::class, 'sportType']);
+Route::get('cities', [LookupController::class, 'city']);
 Route::get('venues', [VenueController::class, 'index']);
+Route::get('venues/{venue}', [VenueController::class, 'show']);
 
 Route::prefix('auth/venue')->group(function () {
     Route::post('register', [VenueAuthController::class, 'register']);

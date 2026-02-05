@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('court_materials', function(Blueprint $table) {
             $table->id();
             $table->enum('material_type', ['Hard Court', 'Clay Court', 'Grass Court'])->default('Hard Court');
+            $table->engine = 'InnoDB';
         });
     }
 

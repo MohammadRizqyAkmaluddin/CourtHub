@@ -6,23 +6,18 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
+
     public function up(): void
     {
-        Schema::create('court_images', function(Blueprint $table) {
+        Schema::create('sport_types', function(Blueprint $table){
             $table->id();
-            $table->foreignId('court_id')->constrained()->cascadeOnDelete();
-            $table->string('image');
+            $table->string('type');
+            $table->engine = 'InnoDB';
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        //
+
     }
 };

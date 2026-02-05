@@ -13,7 +13,7 @@ class Venue extends Authenticatable
 
     protected $table = 'venues';
 
-    protected $fillable = ['name', 'city_id', 'email', 'password', 'description', 'rules', 'address', 'bank_account_number'];
+    protected $fillable = ['name', 'city_id', 'email', 'password', 'description', 'rules', 'address', 'bank_account'];
 
     protected $hidden = ['password'];
 
@@ -34,5 +34,8 @@ class Venue extends Authenticatable
     }
     public function courtBooking() {
         return $this->hasMany(CourtBooking::class);
+    }
+    public function images() {
+        return $this->hasMany(VenueImage::class);
     }
 }
