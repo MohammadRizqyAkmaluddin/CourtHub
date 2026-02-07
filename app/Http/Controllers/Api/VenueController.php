@@ -52,9 +52,10 @@ class VenueController extends Controller
     public function show(Venue $venue)
     {
         $venue->load([
+            'facility:id,venue_id,facility_type_id',
             'city:id,city,province',
             'images:id,venue_id,image',
-            'court.sportType:id,type'
+            'court.sportType:id,type',
         ]);
 
         return response()->json($venue);
@@ -66,7 +67,6 @@ class VenueController extends Controller
             'data' => $request->user('venue')
         ]);
     }
-
 
 }
 

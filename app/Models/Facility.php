@@ -13,6 +13,6 @@ class Facility extends Model
         return $this->belongsTo(Venue::class);
     }
     public function facilityType(){
-        return $this->hasMany(FacilityType::class);
+        return $this->belongsTo(FacilityType::class);
     }
 }

@@ -84,6 +84,8 @@ class CourtSeeder extends Seeder
 
         $rows = [];
 
+        $duration = 0;
+
         foreach ($venueSportMap as $venueId => $defaultSport) {
             $totalCourts = rand(2, 6);
 
@@ -104,12 +106,17 @@ class CourtSeeder extends Seeder
                 $rawPrice = rand($min, $max);
                 $price = floor($rawPrice / 5000) * 5000;
 
-                // 🎯 generate image sesuai sport
                 if (isset($sportImages[$sportTypeId])) {
                     [$prefix, $maxImage] = $sportImages[$sportTypeId];
                     $image = $prefix . rand(1, $maxImage) . '.jpg';
                 } else {
                     $image = 'default.jpg';
+                }
+
+                if ($sportTypeId <= 2 || $sportTypeId === 9) {
+                    $duration = 120;
+                } else {
+                    $duration = 60;
                 }
 
                 $rows[] = [
@@ -120,6 +127,7 @@ class CourtSeeder extends Seeder
                     'name' => $courtNames[array_rand($courtNames)],
                     'price' => $price,
                     'image' => $image,
+                    'session_duration' => $duration
                 ];
             }
         }
