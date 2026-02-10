@@ -23,6 +23,9 @@ class User extends Authenticatable
     public function city() {
         return $this->belongsTo(City::class);
     }
+    public function rating() {
+        return $this->hasMany(Rating::class);
+    }
 
     protected $appends = ['profile_image_url'];
 

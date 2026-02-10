@@ -24,12 +24,6 @@ return new class extends Migration
             $table->string('image')->nullable();
             $table->engine = 'InnoDB';
         });
-
-        DB::statement("
-            ALTER TABLE courts
-            ADD CONSTRAINT check_session_duration
-            CHECK (session_duration IN (60, 30, 100, 120)
-        ");
     }
 
     /**

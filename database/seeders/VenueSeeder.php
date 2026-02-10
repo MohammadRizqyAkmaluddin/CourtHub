@@ -14,7 +14,8 @@ class VenueSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('venues')->insert([
+
+        $venues = [
             [
                 'city_id'       => '1',
                 'name'          => 'Elite Padel Club',
@@ -652,6 +653,20 @@ class VenueSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now()
             ],
-        ]);
+        ];
+
+        $latitude  = -6.16744800;
+        $longitude = 106.83108600;
+        $map = 'https://maps.app.goo.gl/xKkhqeLLGzdHwoEy9';
+
+        $venues = collect($venues)->map(function ($venue) use ($latitude, $longitude, $map) {
+            return array_merge($venue, [
+                'latitude'   => $latitude,
+                'longitude'  => $longitude,
+                'link_map'   => $map
+            ]);
+        })->toArray();
+
+        DB::table('venues')->insert($venues);
     }
 }

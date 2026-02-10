@@ -11,14 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('booking_holds', function(Blueprint $table){
+        Schema::create('ratings', function(Blueprint $table){
             $table->id();
-            $table->foreignId('booking_hold_header_id')->constrained()->cascadeOnDelete();
-            $table->time('start_time');
-            $table->time('end_time');
-            $table->integer('price');
+            $table->foreignId('user_id')->constrained();
+            $table-> foreignId('venue_id')->constrained()->cascadeOnDelete();
+            $table->integer('rate');
             $table->timestamps();
-
             $table->engine = 'InnoDB';
         });
     }

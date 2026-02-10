@@ -21,6 +21,10 @@ class OperationHourSeeder extends Seeder
         ];
 
         foreach (range(1, 49) as $venueId) {
+
+            // ✅ Satu open_time untuk satu venue
+            $venueOpenTime = collect($openingTimeOptions)->random();
+
             foreach (range(1, 7) as $dayOfWeek) {
 
                 $isClosed = rand(1, 100) <= 15;
@@ -38,19 +42,19 @@ class OperationHourSeeder extends Seeder
                     continue;
                 }
 
-                $openTime = collect($openingTimeOptions)->random();
-
-                // Durasi buka 8–16 jam
-                $durationHours = rand(8, 16);
-
-                $closeTime = Carbon::createFromFormat('H:i', $openTime)
-                    ->addHours($durationHours)
-                    ->format('H:i');
+                // ✅ Close time logic
+                if (in_array($dayOfWeek, [6, 7])) {
+                    // Weekend → mostly tutup jam 00:00
+                    $closeTime = rand(1, 100) <= 75 ? '00:00' : '22:00';
+                } else {
+                    // Weekday
+                    $closeTime = '22:00';
+                }
 
                 DB::table('operation_hours')->insert([
                     'venue_id'    => $venueId,
                     'day_of_week' => $dayOfWeek,
-                    'open_time'   => $openTime,
+                    'open_time'   => $venueOpenTime,
                     'close_time'  => $closeTime,
                     'is_closed'   => false,
                     'created_at'  => now(),
@@ -59,4 +63,5 @@ class OperationHourSeeder extends Seeder
             }
         }
     }
+
 }

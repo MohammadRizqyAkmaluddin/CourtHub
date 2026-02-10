@@ -7,20 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 class BookingHold extends Model
 {
     protected $fillable = [
-        'user_id',
-        'court_id',
-        'booking_date',
+        'booking_hold_header_id',
         'start_time',
         'end_time',
-        'expires_at',
+        'price'
     ];
 
-    protected $cast = [
-        'booking_date' => 'date',
-        'expires_at'   => ''
-    ];
-
-    public function court() {
-        return $this->belongsTo(Court::class);
+    public function header() {
+        return $this->belongsTo(BookingHoldHeader::class, 'booking_hold_header_id');
     }
 }

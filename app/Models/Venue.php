@@ -20,8 +20,8 @@ class Venue extends Authenticatable
     public function city() {
         return $this->belongsTo(City::class);
     }
-    public function operationHour() {
-        return $this->hasOne(OperationHour::class);
+    public function operationHours() {
+        return $this->hasMany(OperationHour::class);
     }
     public function reservationTerm() {
         return $this->hasOne(ReservationTerm::class);
@@ -37,5 +37,8 @@ class Venue extends Authenticatable
     }
     public function images() {
         return $this->hasMany(VenueImage::class);
+    }
+    public function rating() {
+        return $this->hasMany(Rating::class);
     }
 }

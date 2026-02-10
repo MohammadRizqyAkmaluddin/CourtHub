@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\BookingHold;
 use App\Models\BookingSession;
 use App\Models\Booking;
+use Illuminate\Support\Facades\Auth;
 
 use function Symfony\Component\Clock\now;
 
@@ -16,13 +17,13 @@ class BookingController extends Controller
     public function checkout(Request $request)
     {
         return DB::transaction(function () {
-            $hold = BookingHold::where('user_id', auth()->id())
+            $hold = BookingHold::where('user_id', Auth::id())
                 ->where('expires_at', '>', now())
                 ->lockForUpdate()
                 ->firstOrFail();
 
             $booking = Booking::create([
-                'user_id' => auth()->id(),
+                'user_id' => Auth::id(),
                 'status'  => 'pending'
             ]);
 
@@ -38,5 +39,19 @@ class BookingController extends Controller
 
             return $booking;
         });
+    }
+
+    public function callback(Request $request)
+    {
+        $booking = Booking::where('payment_ref', $request->order_id)->first();
+
+        if (!$booking || $booking->status === 'paid') {
+            return response()->json(['ok' => true]);
+        }
+        if ($request->transaction_status === 'settlement') {
+            $booking->update(['status' => 'paid']);
+        }
+
+        return response()->json(['ok' => true]);
     }
 }

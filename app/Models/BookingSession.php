@@ -17,4 +17,8 @@ class BookingSession extends Model
     protected $cast = [
         'booking_date' => 'date'
     ];
+
+    public function booking() {
+        return $this->belongsTo(Booking::class);
+    }
 }
