@@ -26,6 +26,12 @@ class User extends Authenticatable
     public function rating() {
         return $this->hasMany(Rating::class);
     }
+    public function community() {
+        return $this->hasMany(Community::class);
+    }
+    public function member() {
+        return $this->hasMany(CommunityMember::class);
+    }
 
     protected $appends = ['profile_image_url'];
 

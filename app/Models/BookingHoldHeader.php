@@ -13,6 +13,7 @@ class BookingHoldHeader extends Model
         'court_id',
         'user_id',
         'guest_contact',
+        'guest_name',
         'booking_date',
         'expires_at',
     ];

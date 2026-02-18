@@ -11,16 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('booking_hold_headers', function(Blueprint $table) {
+        Schema::create('sparrings', function(Blueprint $table){
             $table->id();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('venue_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('court_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('user_id')->nullable()->constrained()->cascadeOnDelete();
-            $table->string('guest_contact')->nullable();
-            $table->string('guest_name')->nullable();
-            $table->date('booking_date');
-            $table->datetime('expires_at');
-            $table->timestamps();
+            $table->date('date');
             $table->engine = 'InnoDB';
         });
     }

@@ -11,12 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('ratings', function(Blueprint $table){
+        Schema::create('community_members', function(Blueprint $table){
             $table->id();
-            $table->foreignId('user_id')->constrained();
-            $table-> foreignId('venue_id')->constrained()->cascadeOnDelete();
-            $table->integer('rate');
-            $table->text('review')->nullable();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->enum('status', ['paid', 'pending']);
+            $table->foreignId('community_id')->constrained()->cascadeOnDelete();
             $table->timestamps();
             $table->engine = 'InnoDB';
         });

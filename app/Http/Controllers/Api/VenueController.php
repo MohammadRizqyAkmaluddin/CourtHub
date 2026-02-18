@@ -26,6 +26,7 @@ class VenueController extends Controller
                 )
                 ->with([
                     'sportType:id,type'
+
                 ]);
             }
         ])
@@ -56,6 +57,7 @@ class VenueController extends Controller
             'city:id,city,province',
             'images:id,venue_id,image',
             'court.sportType:id,type',
+            'rating.user'
         ]);
 
         return response()->json($venue);

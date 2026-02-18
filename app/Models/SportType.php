@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class SportType extends Model
 {
     public function court() {
-        return $this->belongsTo(Court::class);
+        return $this->hasMany(Court::class);
+    }
+    public function community() {
+        return $this->hasMany(Community::class);
     }
 }

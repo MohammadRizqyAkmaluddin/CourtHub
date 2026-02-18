@@ -88,6 +88,7 @@ class BookingHoldController extends Controller
             'court_id' => $request->court_id,
             'user_id'  => null,
             'guest_contact' => $request->guest_contact,
+            'guest_name' => $request->guest_name,
             'booking_date'  => $request->date,
             'expires_at' => $expiresAt
         ]);

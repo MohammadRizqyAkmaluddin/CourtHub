@@ -41,4 +41,7 @@ class Venue extends Authenticatable
     public function rating() {
         return $this->hasMany(Rating::class);
     }
+    public function community() {
+        return $this->hasMany(Community::class);
+    }
 }

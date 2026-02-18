@@ -9,7 +9,7 @@ use App\Http\Controllers\Api\VenueAuthController;
 use App\Http\Controllers\Api\VenueController;
 use App\Http\Controllers\Api\CourtAvailabilityController;
 use App\Http\Controllers\Api\BookingHoldController;
-
+use App\Http\Controllers\Api\CommunityController;
 
 Route::get('/test', function () {
     return 'API OK';
@@ -19,6 +19,7 @@ Route::get('sport-types', [LookupController::class, 'sportType']);
 Route::get('cities', [LookupController::class, 'city']);
 Route::get('venues', [VenueController::class, 'index']);
 Route::get('venues/{venue}', [VenueController::class, 'show']);
+Route::get('communities', [CommunityController::class, 'index']);
 
 Route::post('/booking-holds/guest', [BookingHoldController::class, 'storeGuest']);
 
@@ -42,6 +43,7 @@ Route::prefix('auth/user')->group(function () {
     Route::post('login', [UserAuthController::class, 'login']);
 });
 
+Route::post('/community/store', [CommunityController::class, 'store']);
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/booking-holds/auth', [BookingHoldController::class, 'storeAuth']);
