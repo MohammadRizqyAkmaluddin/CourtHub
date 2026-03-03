@@ -8,7 +8,6 @@ use App\Http\Controllers\Api\VenueController;
 use App\Http\Controllers\Api\CourtAvailabilityController;
 use App\Http\Controllers\Api\BookingHoldController;
 use App\Http\Controllers\Api\CommunityController;
-use App\Models\Booking;
 use Illuminate\Http\Request;
 
 Route::get('/test', function () {
