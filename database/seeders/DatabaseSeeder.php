@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
             CourtSeeder::class,
             OperationHourSeeder::class,
             RatingSeeder::class,
+            LevelSeeder::class,
             CommunitySeeder::class
         ]);
     }

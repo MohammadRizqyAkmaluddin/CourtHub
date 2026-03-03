@@ -11,14 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('booking_sessions', function(Blueprint $table){
+        Schema::create('levels', function(Blueprint $table){
             $table->id();
-            $table->foreignId('booking_id')->constrained()->cascadeOnDelete();
-            $table->time('start_time');
-            $table->time('end_time');
-            $table->integer('price');
-
-            $table->index('booking_id');
+            $table->string('level');
             $table->engine = 'InnoDB';
         });
     }

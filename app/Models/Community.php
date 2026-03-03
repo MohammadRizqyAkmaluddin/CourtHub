@@ -32,6 +32,7 @@ class Community extends Model
     public function getImageUrlAttribute() {
         return asset('storage/community/' . $this->image);
     }
+    
 
     public function user() {
         return $this->belongsTo(User::class);
@@ -47,5 +48,8 @@ class Community extends Model
     }
     public function city() {
         return $this->belongsTo(City::class);
+    }
+    public function level() {
+        return $this->belongsTo(Level::class);
     }
 }

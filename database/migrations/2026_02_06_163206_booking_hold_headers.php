@@ -19,6 +19,9 @@ return new class extends Migration
             $table->string('guest_contact')->nullable();
             $table->string('guest_name')->nullable();
             $table->date('booking_date');
+            $table->string('midtrans_order_id')->nullable()->unique();
+            $table->string('snap_token')->nullable();
+            $table->string('payment_status')->default('hold');
             $table->datetime('expires_at');
             $table->timestamps();
             $table->engine = 'InnoDB';

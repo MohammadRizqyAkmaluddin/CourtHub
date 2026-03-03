@@ -11,8 +11,14 @@ class Booking extends Model
         'court_id',
         'user_id',
         'guest_contact',
+        'guest_name',
         'booking_date',
         'total_price',
+        'start_time',
+        'end_time',
+        'price',
+        'midtrans_order_id',
+        'payment_status',
         'status'
     ];
 

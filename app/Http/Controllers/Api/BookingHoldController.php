@@ -5,10 +5,14 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\Booking;
+use App\Models\BookingSession;
 use App\Models\BookingHold;
 use App\Models\BookingHoldHeader;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Midtrans\Snap;
+use Illuminate\Support\Str;
 
 use function Symfony\Component\Clock\now;
 
@@ -247,5 +251,213 @@ class BookingHoldController extends Controller
     }
 
 
+    private function finalizeBooking($header)
+    {
+        DB::transaction(function () use ($header) {
+
+            foreach ($header->bookingHolds as $hold) {
+
+                // 🔥 ANTI DOUBLE BOOKING CHECK
+                $conflict = Booking::where('court_id', $header->court_id)
+                    ->where('booking_date', $header->booking_date)
+                    ->where(function ($query) use ($hold) {
+                        $query->where('start_time', '<', $hold->end_time)
+                            ->where('end_time', '>', $hold->start_time);
+                    })
+                    ->lockForUpdate()
+                    ->exists();
+
+                if ($conflict) {
+                    throw new \Exception('Slot already booked');
+                }
+
+                Booking::create([
+                    'venue_id' => $header->venue_id,
+                    'court_id' => $header->court_id,
+                    'user_id' => $header->user_id,
+                    'guest_contact' => $header->guest_contact,
+                    'guest_name' => $header->guest_name,
+                    'booking_date' => $header->booking_date,
+                    'start_time' => $hold->start_time,
+                    'end_time' => $hold->end_time,
+                    'price' => $hold->price,
+                    'midtrans_order_id' => $header->midtrans_order_id,
+                    'payment_status' => 'paid',
+                    'status' => 'confirmed'
+                ]);
+            }
+
+            $header->update([
+                'payment_status' => 'paid'
+            ]);
+
+            $header->bookingHolds()->delete();
+            $header->delete();
+        });
+    }
+
+    public function callback(Request $request)
+    {
+        $serverKey = config('midtrans.server_key');
+
+        $hashed = hash(
+            "sha512",
+            $request->order_id .
+            $request->status_code .
+            $request->gross_amount .
+            $serverKey
+        );
+
+        if ($hashed !== $request->signature_key) {
+            return response()->json(['message' => 'Invalid signature'], 403);
+        }
+
+        $header = BookingHoldHeader::with('bookingHolds')
+            ->where('midtrans_order_id', $request->order_id)
+            ->first();
+
+        if (!$header) {
+            return response()->json(['message' => 'Booking hold not found'], 404);
+        }
+
+        // Prevent duplicate callback execution
+        if ($header->payment_status === 'paid') {
+            return response()->json(['message' => 'Already processed']);
+        }
+
+        if (in_array($request->transaction_status, ['settlement', 'capture'])) {
+
+            $this->finalizeBooking($header);
+
+            return response()->json(['message' => 'Booking finalized']);
+        }
+
+        if (in_array($request->transaction_status, ['expire', 'cancel'])) {
+
+            $header->bookingHolds()->delete();
+            $header->delete();
+
+            return response()->json(['message' => 'Booking expired']);
+        }
+
+
+
+        return response()->json(['message' => 'Unhandled status']);
+    }
+
+    public function createPayment($id)
+    {
+        try {
+
+            $header = BookingHoldHeader::with('hold')->findOrFail($id);
+
+            $orderId = 'ORDER-' . time() . '-' . $header->id;
+
+            $grossAmount = $header->hold->sum('price');
+
+            if ($grossAmount <= 0) {
+                throw new \Exception('Total price is 0');
+            }
+
+            $params = [
+                'transaction_details' => [
+                    'order_id' => $orderId,
+                    'gross_amount' => $grossAmount,
+                ],
+            ];
+
+            $snapToken = \Midtrans\Snap::getSnapToken($params);
+
+            $header->update([
+                'midtrans_order_id' => $orderId,
+                'snap_token' => $snapToken,
+                'payment_status' => 'pending'
+            ]);
+
+            return response()->json([
+                'snap_token' => $snapToken
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => $e->getMessage(),
+                'line' => $e->getLine(),
+            ], 500);
+        }
+    }
+
+
+    private function markAsPaid($orderId)
+    {
+            DB::transaction(function () use ($orderId) {
+
+                $header = BookingHoldHeader::with('hold')
+                    ->where('midtrans_order_id', $orderId)
+                    ->first();
+
+                if (!$header) return;
+
+                $totalPrice = $header->hold->sum('price');
+
+                // 1️⃣ create booking
+                $booking = Booking::create([
+                    'venue_id' => $header->venue_id,
+                    'court_id' => $header->court_id,
+                    'booking_date' => $header->booking_date,
+                    'user_id' => $header->user_id,
+                    'guest_contact' => $header->guest_contact,
+                    'guest_name' => $header->guest_name,
+                    'price' => $totalPrice,
+                    'midtrans_order_id' => $header->midtrans_order_id,
+                    'payment_status' => 'paid',
+                    'status' => 'confirmed',
+                ]);
+
+                // 2️⃣ insert sessions
+                foreach ($header->hold as $hold) {
+                    BookingSession::create([
+                        'booking_id' => $booking->id,
+                        'start_time' => $hold->start_time,
+                        'end_time'   => $hold->end_time,
+                        'price'      => $hold->price,
+                    ]);
+                }
+
+                // 3️⃣ hapus hold
+                $header->hold()->delete();
+                $header->delete();
+            });
+    }
+
+    private function markAsFailed($orderId)
+    {
+        $header = BookingHoldHeader::where('midtrans_order_id', $orderId)->first();
+
+        if (!$header) return;
+
+        $header->hold()->delete();
+        $header->delete();
+    }
+
+    public function handle(Request $request)
+    {
+        $orderId = $request->order_id;
+        $status = $request->transaction_status;
+        $fraud = $request->fraud_status;
+
+        if ($status == 'capture') {
+            if ($fraud == 'accept') {
+                $this->markAsPaid($orderId);
+            }
+        }
+        elseif ($status == 'settlement') {
+            $this->markAsPaid($orderId);
+        }
+        elseif ($status == 'expire' || $status == 'cancel') {
+            $this->markAsFailed($orderId);
+        }
+
+        return response()->json(['message' => 'ok']);
+    }
 
 }

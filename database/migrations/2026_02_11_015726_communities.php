@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('venue_id')->nullable()->constrained()->cascadeOnDelete();
             $table->foreignId('sport_type_id')->constrained()->cascadeOnDelete();
             $table->string('name');
+            $table->foreignId('level_id')->constrained()->cascadeOnDelete();
             $table->string('venue_name')->nullable();
             $table->foreignId('city_id')->nullable()->constrained();
             $table->string('address')->nullable();

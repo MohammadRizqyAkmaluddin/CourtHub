@@ -3,16 +3,17 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Community;
+use App\Models\CommunityMember;
 
 class CommunityController extends Controller
 {
     public function index(Request $request)
     {
-        $perPage = $request->get('per_page', 5);
-        $query = Community::with('sportType','city','venue','venue.city','user','member');
+        $perPage = $request->get('per_page', 4);
+        $query = Community::with('sportType','city','venue','venue.city','user','member', 'level');
 
         if ($request->filled('search')) {
             $query->where('name', 'LIKE', '%' . $request->search . '%');
@@ -29,57 +30,107 @@ class CommunityController extends Controller
         return response()->json($query->paginate($perPage));
     }
 
-    public function store(Request $request) {
-        // $request->validate([
-        //     'user_id'  => 'required|users:user_id',
-        //     'venue_id' => 'nullable|venues:id',
-        //     'sport_type_id' => 'required|sport_types:id',
-        //     'name' => 'required|string',
-        //     'city_id' => 'nullable|cities:id',
-        //     'address' => 'nullable|string',
-        //     'latitude' => 'nullable|string',
-        //     'longitude' => 'nullable|string',
-        //     'membership_fee' => 'required|integer',
-        //     'total_member' => 'required|integer',
-        //     'max_slot' => 'required|integer',
-        //     'description'   => 'required|string',
-        //     'image' => 'nullable|image',
-        //     'day_of_week' => 'required|integer',
-        //     // 'start_time' => 'required',
-        //     // 'end_time' => 'required'
-        // ]);
+    public function suggestion($id)
+    {
+        $data = Community::where('id', '!=', $id)
+        ->with('sportType','city','venue','venue.city','user','member', 'level')
+        ->inRandomOrder()
+        ->limit(4)
+        ->get();
 
-        $venueCheck = Community::where('venue_id', $request->venue_id)->first();
+        return response()->json([
+            'success' => true,
+            'data' => $data
+        ]);
+    }
 
-        if ($venueCheck) {
+    public function show(Community $community) {
+        $community->load([
+            'user',
+            'venue.firstImage',
+            'member',
+            'city',
+            'sportType',
+            'level'
+        ]);
+
+        return response()->json($community);
+    }
+
+    public function memberRegister(Request $request) {
+
+        $communityCheck = Community::where('id', $request->community_id)->first();
+        if (!$communityCheck) {
             return response()->json([
                 'success' => false,
-                'message' => 'venue already has community'
+                'message' => 'community not found'
             ]);
         }
 
-        $data = Community::create([
-            'user_id'   => $request->user_id,
-            'venue_id'  => $request->venue_id,
-            'sport_type_id' => $request->sport_type_id,
-            'name'  => $request->name,
-            'city_id' => $request->city_id,
-            'address' => $request->address,
-            'latitude' => $request->latitude,
-            'longitude' => $request->longitude,
-            'membership_fee' => $request->membership_fee,
-            'total_member' => $request->total_member,
-            'max_slot' => $request->max_slot,
-            'description' => $request->description,
-            'image' => $request->image,
-            'day_of_week' => $request->day_of_week,
-            'start_time' => $request->start_time,
-            'end_time' => $request->end_time
+        $data = CommunityMember::create([
+            'user_id' => Auth::user()->id,
+            'status' => 'Pending',
+            'community_id' => $request->community_id
         ]);
 
         return response()->json([
             'success' => true,
-            'community' => $data
+            'data' => $data
         ]);
     }
+
+
+    // public function store(Request $request) {
+    //     // $request->validate([
+    //     //     'user_id'  => 'required|users:user_id',
+    //     //     'venue_id' => 'nullable|venues:id',
+    //     //     'sport_type_id' => 'required|sport_types:id',
+    //     //     'name' => 'required|string',
+    //     //     'city_id' => 'nullable|cities:id',
+    //     //     'address' => 'nullable|string',
+    //     //     'latitude' => 'nullable|string',
+    //     //     'longitude' => 'nullable|string',
+    //     //     'membership_fee' => 'required|integer',
+    //     //     'total_member' => 'required|integer',
+    //     //     'max_slot' => 'required|integer',
+    //     //     'description'   => 'required|string',
+    //     //     'image' => 'nullable|image',
+    //     //     'day_of_week' => 'required|integer',
+    //     //     // 'start_time' => 'required',
+    //     //     // 'end_time' => 'required'
+    //     // ]);
+
+    //     $venueCheck = Community::where('venue_id', $request->venue_id)->first();
+
+    //     if ($venueCheck) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'venue already has community'
+    //         ]);
+    //     }
+
+    //     $data = Community::create([
+    //         'user_id'   => $request->user_id,
+    //         'venue_id'  => $request->venue_id,
+    //         'sport_type_id' => $request->sport_type_id,
+    //         'name'  => $request->name,
+    //         'city_id' => $request->city_id,
+    //         'address' => $request->address,
+    //         'latitude' => $request->latitude,
+    //         'longitude' => $request->longitude,
+    //         'membership_fee' => $request->membership_fee,
+    //         'total_member' => $request->total_member,
+    //         'max_slot' => $request->max_slot,
+    //         'description' => $request->description,
+    //         'image' => $request->image,
+    //         'day_of_week' => $request->day_of_week,
+    //         'start_time' => $request->start_time,
+    //         'end_time' => $request->end_time
+    //     ]);
+
+    //     return response()->json([
+    //         'success' => true,
+    //         'community' => $data
+    //     ]);
+    // }
 }

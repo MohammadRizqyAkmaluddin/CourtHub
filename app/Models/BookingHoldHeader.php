@@ -16,6 +16,10 @@ class BookingHoldHeader extends Model
         'guest_name',
         'booking_date',
         'expires_at',
+        'order_id',
+        'midtrans_order_id',
+        'snap_token',
+        'payment_status'
     ];
     protected $cast = [
         'booking_date' => 'date',

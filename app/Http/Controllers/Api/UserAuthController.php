@@ -6,7 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use App\Models\User;
-use Illuminate\Container\Attributes\Auth;
+use Illuminate\Support\Facades\Auth;
+// use Illuminate\Container\Attributes\Auth;
 
 class UserAuthController extends Controller
 {
@@ -50,9 +51,15 @@ class UserAuthController extends Controller
         ]);
     }
 
-    public function profile(Request $request)
+    public function profile()
     {
-        return response()->json($request->user());
+        $userId = Auth::user();
+        $data = User::where('id', $userId->id )->first();
+
+        return response()->json([
+            'success' => true,
+            'data' => $data
+        ]);
     }
 
 

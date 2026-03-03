@@ -211,16 +211,16 @@ class CourtAvailabilityController extends Controller
         $bookedSessions = BookingSession::whereHas('booking', function ($q) use ($court, $date) {
             $q->where('court_id', $court->id)
             ->whereDate('booking_date', $date)
-            ->where('status', 'paid');
+            ->where('status', 'confirmed');
         })->get();
 
 
         // holds (not expired)
-        $holds = BookingHoldHeader::with('hold')
-            ->where('court_id', $court->id)
+        $holds = BookingHold::whereHas('header', function ($q) use ($court, $date) {
+            $q->where('court_id', $court->id)
             ->whereDate('booking_date', $date)
-            ->where('expires_at', '>', now())
-            ->get();
+            ->where('expires_at', '>', now());
+        })->get();
 
         $sessions = [];
 
@@ -228,20 +228,23 @@ class CourtAvailabilityController extends Controller
             $start = $open->copy();
             $end = $open->copy()->addMinutes($duration);
 
-            $overlap = $bookedSessions->contains(fn ($b) =>
-                $start < Carbon::parse($b->end_time) &&
-                $end > Carbon::parse($b->start_time)
-            ) || $holds->contains(fn ($h) =>
-                $start < Carbon::parse($h->end_time) &&
-                $end > Carbon::parse($h->start_time)
-            );
+            $overlap =
+                $bookedSessions->contains(fn ($b) =>
+                    $start < Carbon::parse($b->end_time) &&
+                    $end > Carbon::parse($b->start_time)
+                )
+                ||
+                $holds->contains(fn ($h) =>
+                    $start < Carbon::parse($h->end_time) &&
+                    $end > Carbon::parse($h->start_time)
+                );
 
-            $sessions[] = [
-                'start' => $start->format('H:i'),
-                'end' => $end->format('H:i'),
-                'price' => $price,
-                'available' => !$overlap
-            ];
+                $sessions[] = [
+                    'start' => $start->format('H:i'),
+                    'end' => $end->format('H:i'),
+                    'price' => $price,
+                    'available' => !$overlap
+                ];
 
             $open->addMinutes($duration);
         }
@@ -267,6 +270,4 @@ class CourtAvailabilityController extends Controller
 
         return [$start, $end];
     }
-
-
 }

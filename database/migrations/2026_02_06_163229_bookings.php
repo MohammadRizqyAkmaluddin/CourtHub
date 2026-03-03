@@ -17,11 +17,21 @@ return new class extends Migration
             $table->foreignId('court_id')->constrained();
             $table->foreignId('user_id')->nullable()->constrained();
             $table->string('guest_contact')->nullable();
-            $table->date('booking_date');
-            $table->integer('total_price');
-            $table->enum('status', ['pending', 'paid', 'cancelled', 'expired']);
+            $table->string('guest_name')->nullable();
 
-            $table->index('status');
+            $table->date('booking_date');
+
+            $table->integer('price');
+
+            $table->string('midtrans_order_id')->unique();
+            $table->string('payment_status');
+
+            $table->string('status')->default('confirmed');
+            // confirmed | cancelled | expired
+
+            $table->timestamps();
+
+            $table->index(['venue_id', 'court_id', 'booking_date']);
             $table->engine = 'InnoDB';
         });
     }

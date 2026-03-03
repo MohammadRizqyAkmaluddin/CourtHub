@@ -2,14 +2,14 @@
 
 use App\Http\Controllers\Api\LookupController;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Http\Request;
-use App\Http\Controllers\Api\RegionController;
 use App\Http\Controllers\Api\UserAuthController;
 use App\Http\Controllers\Api\VenueAuthController;
 use App\Http\Controllers\Api\VenueController;
 use App\Http\Controllers\Api\CourtAvailabilityController;
 use App\Http\Controllers\Api\BookingHoldController;
 use App\Http\Controllers\Api\CommunityController;
+use App\Models\Booking;
+use Illuminate\Http\Request;
 
 Route::get('/test', function () {
     return 'API OK';
@@ -20,12 +20,19 @@ Route::get('cities', [LookupController::class, 'city']);
 Route::get('venues', [VenueController::class, 'index']);
 Route::get('venues/{venue}', [VenueController::class, 'show']);
 Route::get('communities', [CommunityController::class, 'index']);
+Route::get('suggestion/{community}', [CommunityController::class, 'suggestion']);
+Route::get('communities/{community}', [CommunityController::class, 'show']);
+
+Route::post('/booking-holds/{id}/pay', [BookingHoldController::class, 'createPayment']);
+// Route::post('/midtrans/callback', [BookingHoldController::class, 'callback']);
+Route::post('/midtrans/callback', [BookingHoldController::class, 'handle']);
 
 Route::post('/booking-holds/guest', [BookingHoldController::class, 'storeGuest']);
 
 Route::get('/booking-holds/{id}', [BookingHoldController::class, 'show']);
 
 Route::middleware('auth:user')->get('/my-activity/booking-holds',[BookingHoldController::class, 'myActiveHolds']);
+Route::get('/profile', [UserAuthController::class, 'profile']);
 
 Route::post('/booking-holds/cancel', [BookingHoldController::class, 'cancel']);
 
@@ -44,19 +51,13 @@ Route::prefix('auth/user')->group(function () {
 });
 
 Route::post('/community/store', [CommunityController::class, 'store']);
-Route::middleware('auth:sanctum')->group(function () {
 
-    Route::post('/booking-holds/auth', [BookingHoldController::class, 'storeAuth']);
-    Route::post('/checkExisting', [BookingHoldController::class, 'check']);
+Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('auth/user/me', function (Request $request) {
         return response()->json([
             'user' => $request->user()
         ]);
     });
-    Route::get('auth/venue/me', function (Request $request) {
-        return response()->json([
-            'venue' => $request->user()
-        ]);
-    });
+
 });

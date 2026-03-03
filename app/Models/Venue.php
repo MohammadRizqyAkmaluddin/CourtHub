@@ -13,7 +13,7 @@ class Venue extends Authenticatable
 
     protected $table = 'venues';
 
-    protected $fillable = ['name', 'city_id', 'email', 'password', 'description', 'rules', 'address', 'bank_account'];
+    protected $fillable = ['name', 'city_id', 'email', 'password', 'description', 'rules', 'image', 'address', 'bank_account'];
 
     protected $hidden = ['password'];
 
@@ -37,6 +37,10 @@ class Venue extends Authenticatable
     }
     public function images() {
         return $this->hasMany(VenueImage::class);
+    }
+    public function firstImage()
+    {
+        return $this->hasOne(VenueImage::class)->oldestOfMany();
     }
     public function rating() {
         return $this->hasMany(Rating::class);

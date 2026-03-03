@@ -8,10 +8,10 @@ class BookingSession extends Model
 {
     protected $fillable = [
         'booking_id',
-        'court_id',
-        'booking_date',
         'start_time',
+        'booking_date',
         'end_time',
+        'price'
     ];
 
     protected $cast = [
