@@ -296,55 +296,6 @@ class BookingHoldController extends Controller
         });
     }
 
-    public function callback(Request $request)
-    {
-        $serverKey = config('midtrans.server_key');
-
-        $hashed = hash(
-            "sha512",
-            $request->order_id .
-            $request->status_code .
-            $request->gross_amount .
-            $serverKey
-        );
-
-        if ($hashed !== $request->signature_key) {
-            return response()->json(['message' => 'Invalid signature'], 403);
-        }
-
-        $header = BookingHoldHeader::with('bookingHolds')
-            ->where('midtrans_order_id', $request->order_id)
-            ->first();
-
-        if (!$header) {
-            return response()->json(['message' => 'Booking hold not found'], 404);
-        }
-
-        // Prevent duplicate callback execution
-        if ($header->payment_status === 'paid') {
-            return response()->json(['message' => 'Already processed']);
-        }
-
-        if (in_array($request->transaction_status, ['settlement', 'capture'])) {
-
-            $this->finalizeBooking($header);
-
-            return response()->json(['message' => 'Booking finalized']);
-        }
-
-        if (in_array($request->transaction_status, ['expire', 'cancel'])) {
-
-            $header->bookingHolds()->delete();
-            $header->delete();
-
-            return response()->json(['message' => 'Booking expired']);
-        }
-
-
-
-        return response()->json(['message' => 'Unhandled status']);
-    }
-
     public function createPayment($id)
     {
         try {
@@ -444,6 +395,17 @@ class BookingHoldController extends Controller
         $orderId = $request->order_id;
         $status = $request->transaction_status;
         $fraud = $request->fraud_status;
+
+        $signatureKey = hash('sha512',
+            $request->order_id .
+            $request->status_code .
+            $request->gross_amount .
+            config('midtrans.server_key')
+        );
+
+        if ($signatureKey !== $request->signature_key) {
+            return response()->json(['message' => 'Invalid signature'], 403);
+        }
 
         if ($status == 'capture') {
             if ($fraud == 'accept') {

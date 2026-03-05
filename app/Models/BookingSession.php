@@ -9,7 +9,6 @@ class BookingSession extends Model
     protected $fillable = [
         'booking_id',
         'start_time',
-        'booking_date',
         'end_time',
         'price'
     ];

@@ -23,7 +23,7 @@ Route::get('suggestion/{community}', [CommunityController::class, 'suggestion'])
 Route::get('communities/{community}', [CommunityController::class, 'show']);
 
 Route::post('/booking-holds/{id}/pay', [BookingHoldController::class, 'createPayment']);
-// Route::post('/midtrans/callback', [BookingHoldController::class, 'callback']);
+
 Route::post('/midtrans/callback', [BookingHoldController::class, 'handle']);
 
 Route::post('/booking-holds/guest', [BookingHoldController::class, 'storeGuest']);
@@ -58,5 +58,7 @@ Route::middleware('auth:sanctum')->group(function () {
             'user' => $request->user()
         ]);
     });
+
+    Route::post('/booking-holds/auth', [BookingHoldController::class, 'storeAuth']);
 
 });
