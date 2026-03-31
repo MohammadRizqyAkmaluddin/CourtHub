@@ -9,6 +9,7 @@ use App\Models\Booking;
 use App\Models\BookingSession;
 use App\Models\BookingHold;
 use App\Models\BookingHoldHeader;
+use App\Models\ActivityLevel;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Midtrans\Snap;
@@ -38,14 +39,11 @@ class BookingHoldController extends Controller
             $checkExisting->delete();
         }
 
-        $expiresAt = Carbon::now()->addMinutes(10);
-
         $bookingHoldHeader = BookingHoldHeader::create([
             'venue_id'     => $request->venue_id,
             'court_id'     => $request->court_id,
             'user_id'      => $userId,
-            'booking_date' => $request->date,
-            'expires_at'   => $expiresAt
+            'booking_date' => $request->date
         ]);
 
         $holds = [];
@@ -60,7 +58,6 @@ class BookingHoldController extends Controller
 
         return response()->json([
             'success' => true,
-            'expires_at' => $expiresAt,
             'booking_hold_header_id' => $bookingHoldHeader->id,
             'sessions' => $holds,
         ]);
@@ -161,25 +158,6 @@ class BookingHoldController extends Controller
         ]);
     }
 
-    public function myActiveHolds()
-    {
-        $userId = Auth::id();
-
-        $holds = BookingHoldHeader::with([
-                'venue',
-                'court',
-                'hold' // relasi ke booking_holds
-            ])
-            ->where('user_id', $userId)
-            ->where('expires_at', '>', Carbon::now())
-            ->orderBy('expires_at')
-            ->get();
-
-        return response()->json([
-            'data' => $holds
-        ]);
-    }
-
     public function active(Request $request)
     {
         $user = Auth::user();
@@ -250,52 +228,6 @@ class BookingHoldController extends Controller
         }
     }
 
-
-    private function finalizeBooking($header)
-    {
-        DB::transaction(function () use ($header) {
-
-            foreach ($header->bookingHolds as $hold) {
-
-                // 🔥 ANTI DOUBLE BOOKING CHECK
-                $conflict = Booking::where('court_id', $header->court_id)
-                    ->where('booking_date', $header->booking_date)
-                    ->where(function ($query) use ($hold) {
-                        $query->where('start_time', '<', $hold->end_time)
-                            ->where('end_time', '>', $hold->start_time);
-                    })
-                    ->lockForUpdate()
-                    ->exists();
-
-                if ($conflict) {
-                    throw new \Exception('Slot already booked');
-                }
-
-                Booking::create([
-                    'venue_id' => $header->venue_id,
-                    'court_id' => $header->court_id,
-                    'user_id' => $header->user_id,
-                    'guest_contact' => $header->guest_contact,
-                    'guest_name' => $header->guest_name,
-                    'booking_date' => $header->booking_date,
-                    'start_time' => $hold->start_time,
-                    'end_time' => $hold->end_time,
-                    'price' => $hold->price,
-                    'midtrans_order_id' => $header->midtrans_order_id,
-                    'payment_status' => 'paid',
-                    'status' => 'confirmed'
-                ]);
-            }
-
-            $header->update([
-                'payment_status' => 'paid'
-            ]);
-
-            $header->bookingHolds()->delete();
-            $header->delete();
-        });
-    }
-
     public function createPayment($id)
     {
         try {
@@ -322,7 +254,8 @@ class BookingHoldController extends Controller
             $header->update([
                 'midtrans_order_id' => $orderId,
                 'snap_token' => $snapToken,
-                'payment_status' => 'pending'
+                'payment_status' => 'pending',
+                'expires_at' => Carbon::now()->addMinutes(15),
             ]);
 
             return response()->json([
@@ -340,44 +273,78 @@ class BookingHoldController extends Controller
 
     private function markAsPaid($orderId)
     {
-            DB::transaction(function () use ($orderId) {
+        DB::transaction(function () use ($orderId) {
 
-                $header = BookingHoldHeader::with('hold')
-                    ->where('midtrans_order_id', $orderId)
-                    ->first();
+            $header = BookingHoldHeader::with('hold')
+                ->where('midtrans_order_id', $orderId)
+                ->first();
 
-                if (!$header) return;
+            if (!$header) return;
 
-                $totalPrice = $header->hold->sum('price');
+            $totalPrice = $header->hold->sum('price');
 
-                // 1️⃣ create booking
-                $booking = Booking::create([
-                    'venue_id' => $header->venue_id,
-                    'court_id' => $header->court_id,
-                    'booking_date' => $header->booking_date,
-                    'user_id' => $header->user_id,
-                    'guest_contact' => $header->guest_contact,
-                    'guest_name' => $header->guest_name,
-                    'price' => $totalPrice,
-                    'midtrans_order_id' => $header->midtrans_order_id,
-                    'payment_status' => 'paid',
-                    'status' => 'confirmed',
+            $booking = Booking::create([
+                'venue_id' => $header->venue_id,
+                'court_id' => $header->court_id,
+                'booking_date' => $header->booking_date,
+                'user_id' => $header->user_id,
+                'guest_contact' => $header->guest_contact,
+                'guest_name' => $header->guest_name,
+                'price' => $totalPrice,
+                'midtrans_order_id' => $header->midtrans_order_id,
+                'payment_status' => 'paid',
+                'status' => 'confirmed',
+            ]);
+
+            foreach ($header->hold as $hold) {
+                BookingSession::create([
+                    'booking_id' => $booking->id,
+                    'start_time' => $hold->start_time,
+                    'end_time'   => $hold->end_time,
+                    'price'      => $hold->price,
                 ]);
+            }
 
-                // 2️⃣ insert sessions
-                foreach ($header->hold as $hold) {
-                    BookingSession::create([
-                        'booking_id' => $booking->id,
-                        'start_time' => $hold->start_time,
-                        'end_time'   => $hold->end_time,
-                        'price'      => $hold->price,
-                    ]);
+            $userActivity = ActivityLevel::where('user_id', Auth::id())->first();
+
+            if ($userActivity) {
+                $activityPoints = ($userActivity->total_activity + 1) * 5;
+                $spendingPoints = floor(($userActivity->total_spending + $totalPrice) / 30000);
+                $totalPoints = $activityPoints + $spendingPoints;
+
+                if ($totalPoints < 30) {
+                    $level = 'Rookie';
+                } elseif ($totalPoints < 100) {
+                    $level = 'Casual';
+                } elseif ($totalPoints < 220) {
+                    $level = 'Commited';
+                } elseif ($totalPoints < 400) {
+                    $level = 'Dedicated';
+                } else {
+                    $level = 'Elite';
                 }
+            }
 
-                // 3️⃣ hapus hold
-                $header->hold()->delete();
-                $header->delete();
-            });
+
+            if ($userActivity) {
+                ActivityLevel::update([
+                    'user_id'        => $header->user_id,
+                    'level'          => $level,
+                    'total_activity' => $userActivity->total_activity + 1,
+                    'total_spending' => $userActivity->total_spending + $totalPrice
+                ]);
+            } else {
+                ActivityLevel::insert([
+                    'user_id'        => $header->user_id,
+                    'level'          => 'Rookie',
+                    'total_activity' => 1,
+                    'total_spending' => $totalPrice
+                ]);
+            }
+
+            $header->hold()->delete();
+            $header->delete();
+        });
     }
 
     private function markAsFailed($orderId)
@@ -423,3 +390,49 @@ class BookingHoldController extends Controller
     }
 
 }
+
+
+    // private function finalizeBooking($header)
+    // {
+    //     DB::transaction(function () use ($header) {
+
+    //         foreach ($header->bookingHolds as $hold) {
+
+    //             // 🔥 ANTI DOUBLE BOOKING CHECK
+    //             $conflict = Booking::where('court_id', $header->court_id)
+    //                 ->where('booking_date', $header->booking_date)
+    //                 ->where(function ($query) use ($hold) {
+    //                     $query->where('start_time', '<', $hold->end_time)
+    //                         ->where('end_time', '>', $hold->start_time);
+    //                 })
+    //                 ->lockForUpdate()
+    //                 ->exists();
+
+    //             if ($conflict) {
+    //                 throw new \Exception('Slot already booked');
+    //             }
+
+    //             Booking::create([
+    //                 'venue_id' => $header->venue_id,
+    //                 'court_id' => $header->court_id,
+    //                 'user_id' => $header->user_id,
+    //                 'guest_contact' => $header->guest_contact,
+    //                 'guest_name' => $header->guest_name,
+    //                 'booking_date' => $header->booking_date,
+    //                 'start_time' => $hold->start_time,
+    //                 'end_time' => $hold->end_time,
+    //                 'price' => $hold->price,
+    //                 'midtrans_order_id' => $header->midtrans_order_id,
+    //                 'payment_status' => 'paid',
+    //                 'status' => 'confirmed'
+    //             ]);
+    //         }
+
+    //         $header->update([
+    //             'payment_status' => 'paid'
+    //         ]);
+
+    //         $header->bookingHolds()->delete();
+    //         $header->delete();
+    //     });
+    // }

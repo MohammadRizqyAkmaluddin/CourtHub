@@ -10,8 +10,6 @@ use App\Models\OperationHour;
 use App\Models\BookingSession;
 use App\Models\BookingHold;
 
-use function Symfony\Component\Clock\now;
-
 class CourtAvailabilityController extends Controller
 {
     public function show(Request $request, Court $court)
@@ -62,13 +60,21 @@ class CourtAvailabilityController extends Controller
 
         $sessions = [];
 
+        $now = Carbon::now();
+
         while ($start->copy()->addMinutes($duration)->lte($end)) {
 
             $slotEnd = $start->copy()->addMinutes($duration);
 
+            // ⬅️ SKIP kalau hari ini dan jam sudah lewat
+            if ($date->isToday() && $start->lt($now->addMinutes(5))) {
+                $start = $slotEnd;
+                continue;
+            }
+
             $available = $this->isSlotAvailable(
                 $court->id,
-                $start->toDateString(), // ⬅️ penting
+                $start->toDateString(),
                 $start->format('H:i:s'),
                 $slotEnd->format('H:i:s')
             );
@@ -93,8 +99,23 @@ class CourtAvailabilityController extends Controller
         string $start,
         string $end
     ): bool {
-        $bookingExists = BookingSession::where('court_id', $courtId)
-            ->where('booking_date', $date)
+
+        $slotStart = Carbon::parse($date . ' ' . $start, 'Asia/Jakarta');
+        $now = Carbon::now('Asia/Jakarta');
+
+        if ($slotStart->lt($now)) {
+            return false;
+        }
+
+        if ($slotStart->isPast()) {
+            return false;
+        }
+
+        $bookingExists = BookingSession::whereHas('booking', function ($q) use ($courtId, $date) {
+                $q->where('court_id', $courtId)
+                ->whereDate('booking_date', $date)
+                ->where('status', 'paid');
+            })
             ->where(function ($q) use ($start, $end) {
                 $q->where('start_time', '<', $end)
                 ->where('end_time', '>', $start);
@@ -103,9 +124,12 @@ class CourtAvailabilityController extends Controller
 
         if ($bookingExists) return false;
 
-        $holdExists = BookingHold::where('court_id', $courtId)
-            ->where('booking_date', $date)
-            ->where('expires_at', '>', now())
+        $holdExists = BookingHold::whereHas('header', function ($q) use ($courtId, $date) {
+                $q->where('court_id', $courtId)
+                ->whereDate('booking_date', $date)
+                ->where('payment_status', 'pending')
+                ->where('expires_at', '>', now());
+            })
             ->where(function ($q) use ($start, $end) {
                 $q->where('start_time', '<', $end)
                 ->where('end_time', '>', $start);
@@ -115,7 +139,7 @@ class CourtAvailabilityController extends Controller
         return !$holdExists;
     }
 
-    public function month(Request $request, Court $court)
+    public function month(Court $court)
     {
         $now = Carbon::now();
         $start = $now->copy()->startOfDay();
@@ -218,6 +242,7 @@ class CourtAvailabilityController extends Controller
         $holds = BookingHold::whereHas('header', function ($q) use ($court, $date) {
             $q->where('court_id', $court->id)
             ->whereDate('booking_date', $date)
+            ->where('payment_status', 'pending')
             ->where('expires_at', '>', now());
         })->get();
 
@@ -238,11 +263,15 @@ class CourtAvailabilityController extends Controller
                     $end > Carbon::parse($h->start_time)
                 );
 
+                $now = Carbon::now('Asia/Jakarta');
+
+                $isPast = $date->isToday() && $start->lt($now);
+
                 $sessions[] = [
                     'start' => $start->format('H:i'),
                     'end' => $end->format('H:i'),
                     'price' => $price,
-                    'available' => !$overlap
+                    'available' => !$overlap && !$isPast
                 ];
 
             $open->addMinutes($duration);
@@ -264,7 +293,7 @@ class CourtAvailabilityController extends Controller
         $end   = Carbon::parse($date->toDateString().' '.$close);
 
         if ($end->lte($start)) {
-            $end->addDay(); // lewat tengah malam
+            $end->addDay();
         }
 
         return [$start, $end];

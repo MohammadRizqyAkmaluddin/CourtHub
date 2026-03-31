@@ -2,8 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\City;
-use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -26,9 +24,11 @@ class DatabaseSeeder extends Seeder
             FacilitySeeder::class,
             CourtSeeder::class,
             OperationHourSeeder::class,
-            RatingSeeder::class,
             LevelSeeder::class,
-            CommunitySeeder::class
+            CommunitySeeder::class,
+            CommunityMemberSeeder::class,
+            BookingSeeder::class,
+            RatingSeeder::class
         ]);
     }
 }

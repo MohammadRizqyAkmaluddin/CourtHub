@@ -11,13 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('ratings', function(Blueprint $table){
+        Schema::create('activity_levels', function(Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained();
-            $table-> foreignId('venue_id')->constrained()->cascadeOnDelete();
-            $table->integer('rate');
-            $table->text('review')->nullable();
-            $table->timestamps();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->enum('level', ['Rookie', 'Casual', 'Commited', 'Dedicated', 'Elite']);
+            $table->integer('total_activity');
+            $table->integer('total_spending');
             $table->engine = 'InnoDB';
         });
     }

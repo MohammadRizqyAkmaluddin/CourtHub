@@ -23,7 +23,7 @@ class Court extends Model
     public function courtType() {
         return $this->belongsTo(CourtType::class);
     }
-    public function courtBooking() {
-        return $this->hasMany(CourtBooking::class);
+    public function booking() {
+        return $this->hasMany(Booking::class);
     }
 }

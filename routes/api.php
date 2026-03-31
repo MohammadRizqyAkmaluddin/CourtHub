@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\ActivityController;
+use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\LookupController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\UserAuthController;
@@ -8,6 +10,7 @@ use App\Http\Controllers\Api\VenueController;
 use App\Http\Controllers\Api\CourtAvailabilityController;
 use App\Http\Controllers\Api\BookingHoldController;
 use App\Http\Controllers\Api\CommunityController;
+use App\Http\Controllers\Api\RatingController;
 use Illuminate\Http\Request;
 
 Route::get('/test', function () {
@@ -30,7 +33,6 @@ Route::post('/booking-holds/guest', [BookingHoldController::class, 'storeGuest']
 
 Route::get('/booking-holds/{id}', [BookingHoldController::class, 'show']);
 
-Route::middleware('auth:user')->get('/my-activity/booking-holds',[BookingHoldController::class, 'myActiveHolds']);
 Route::get('/profile', [UserAuthController::class, 'profile']);
 
 Route::post('/booking-holds/cancel', [BookingHoldController::class, 'cancel']);
@@ -59,6 +61,15 @@ Route::middleware('auth:sanctum')->group(function () {
         ]);
     });
 
-    Route::post('/booking-holds/auth', [BookingHoldController::class, 'storeAuth']);
+    Route::get('/my-activity/booking-holds',[ActivityController::class, 'myActiveHolds']);
+    Route::get('/my-activity/active-booking', [ActivityController::class, 'getActiveBookings']);
+    Route::get('/my-activity/booking-history', [ActivityController::class, 'history']);
+    Route::get('/my-activity/community-membership', [ActivityController::class, 'myMembership']);
+    Route::get('/my-activity/level', [ActivityController::class, 'level']);
+    Route::post('/my-activity/{community}/leave-community', [ActivityController::class, 'leaveCommunity']);
 
+    Route::post('/my-activity/rate', [RatingController::class, 'store']);
+
+    Route::post('/booking-holds/auth', [BookingHoldController::class, 'storeAuth']);
+    Route::post('/booking-holds/auth/check', [BookingHoldController::class, 'check']);
 });

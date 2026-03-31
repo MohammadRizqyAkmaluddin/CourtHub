@@ -79,7 +79,6 @@ class CommunityController extends Controller
         ]);
     }
 
-
     // public function store(Request $request) {
     //     // $request->validate([
     //     //     'user_id'  => 'required|users:user_id',

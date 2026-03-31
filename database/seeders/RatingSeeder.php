@@ -2,71 +2,92 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Arr;
-use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 class RatingSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
-    public function run(): void
+    public function run()
+    {
+        $bookings = DB::table('bookings')->get();
+
+        foreach ($bookings as $booking) {
+
+            $exists = DB::table('ratings')
+                ->where('booking_id', $booking->id)
+                ->exists();
+
+            if ($exists) continue;
+
+            // random skip (biar ga semua ada rating)
+            if (rand(0, 1) == 0) continue;
+
+            // random rate 1–5
+            $rate = rand(3, 5);
+
+            // optional review (50% ada, 50% null)
+            $review = rand(0, 1)
+                ? $this->generateReview($rate)
+                : null;
+
+            DB::table('ratings')->insert([
+                'booking_id' => $booking->id,
+                'rate' => $rate,
+                'review' => $review,
+                'created_at' => $booking->booking_date,
+                'updated_at' => $booking->booking_date,
+            ]);
+        }
+    }
+
+    private function generateReview($rate)
     {
         $reviews = [
-            'Great place, very clean and well maintained.',
-            'The staff was friendly and helpful.',
-            'Nice venue but could be better.',
-            'Amazing experience, will come again!',
-            'Not bad, but parking was limited.',
-            'The court quality is excellent.',
-            'Worth the price.',
-            'Lighting could be improved.',
-            'Overall a good experience.',
-            'The venue is clean and well maintained,and the overall atmosphere is comfortable.The staff was helpful from the moment we arrived until we finished playing. Definitely a place I would recommend to friends.',
-            'Great place to play sports, especially if you come with friends. Booking was easy and the staff explained everything clearly. I’ll probably come back again in the near future',
-            'I enjoyed my time here. The court surface is nice and feels well taken care of. It can get a bit crowded during peak hours, so coming earlier might be a better option',
-            'I had a really good experience here. The court quality is solid and the lighting is good enough for evening games. There are a few minor things that could be improved, but overall it’s worth the price.',
-            'Tempatnya cukup nyaman dan bersih. Fasilitas yang disediakan juga lengkap dan masih terawat dengan baik. Pelayanan staf ramah dan membantu, jadi overall pengalamannya cukup memuaskan.',
-            'Tempat ini recommended untuk yang cari venue dengan kualitas yang konsisten. Pelayanannya cepat dan staf cukup sigap. Harga juga masih masuk akal dengan fasilitas yang didapat.',
-            'Overall pengalamannya cukup baik. Suasana nyaman dan tidak terlalu berisik. Cocok untuk main bareng teman tanpa harus khawatir soal kenyamanan.',
-            'Tempatnya nyaman dan bersih.',
-            'Pelayanan ramah dan cepat.',
-            'Cukup bagus untuk main bareng teman.',
-            'Fasilitas lengkap dan terawat.',
-            'Kurang puas dengan pelayanannya.',
-            'Lapangan bagus, recommended.',
-            'Harga sesuai dengan kualitas.',
-            'Parkiran agak sempit.',
-            'Overall oke sih.'
+            5 => [
+                'Tempatnya keren banget, vibes-nya dapet parah! Definitely will come back again.',
+                'Pelayanan mantap, staff-nya helpful dan ramah. Super recommended!',
+                'Court bersih, lighting bagus, overall experience top tier sih.',
+                'Gila sih ini venue, dari fasilitas sampai ambience semuanya premium feel.',
+                'Best place to play so far, ga ada komplain sama sekali.',
+                'Worth every penny, experience-nya satisfying banget!',
+                'Booking gampang, tempat on time, no hassle at all. Love it!',
+            ],
+            4 => [
+                'Bagus sih overall, cuma kadang agak rame aja.',
+                'Nice place, cukup nyaman buat main walaupun ga perfect.',
+                'Worth it lah dengan harga segini, masih oke banget.',
+                'Tempatnya enak, cuma ada sedikit minus di waiting time.',
+                'Good experience overall, bakal balik tapi mungkin pilih jam sepi.',
+                'Fasilitas lengkap, tapi maintenance bisa lebih ditingkatin lagi.',
+                'Pretty solid venue, minor issues tapi masih acceptable.',
+            ],
+            3 => [
+                'Biasa aja sih, nothing special but still playable.',
+                'Lumayan lah buat main, tapi ga terlalu standout.',
+                'Average experience, ga jelek tapi ga wow juga.',
+                'Tempat oke, tapi ada beberapa hal yang bisa diperbaiki.',
+                'Not bad, but also not great. Middle aja lah.',
+                'Cukup buat main bareng temen, tapi ga terlalu memorable.',
+            ],
+            2 => [
+                'Kurang nyaman sih, banyak hal yang bikin kurang enjoy.',
+                'Tempatnya agak kurang terawat, perlu improvement.',
+                'Not really a good experience, mungkin ga balik lagi.',
+                'Fasilitas kurang maksimal, agak kecewa jujur.',
+                'Service kurang responsif, jadi agak ganggu experience.',
+                'Expected more dari tempat ini, ternyata biasa aja bahkan cenderung kurang.',
+            ],
+            1 => [
+                'Kecewa banget, totally not worth it.',
+                'Ga sesuai ekspektasi sama sekali, kapok sih.',
+                'Bad experience overall, banyak hal yang bermasalah.',
+                'Tempat kurang bersih, service juga ga oke.',
+                'Really disappointed, ga bakal balik lagi.',
+                'Worst experience sejauh ini, mending cari tempat lain.',
+            ],
         ];
 
-        $data = [];
-
-        for ($userId = 1; $userId <= 35; $userId++) {
-
-            $totalRatings = rand(5, 20);
-
-            $venueIds = collect(range(1, 49))
-                ->shuffle()
-                ->take($totalRatings);
-
-            foreach ($venueIds as $venueId) {
-                $data[] = [
-                    'user_id'   => $userId,
-                    'venue_id'  => $venueId,
-                    'rate'      => rand(3, 5),
-                    'review'    => rand(0, 100) < 25
-                                    ? null
-                                    : Arr::random($reviews),
-                    'created_at'=> Carbon::now()->subDays(rand(0, 60)),
-                    'updated_at'=> Carbon::now(),
-                ];
-            }
-        }
-
-        DB::table('ratings')->insert($data);
+        return collect($reviews[$rate])->random();
     }
 }

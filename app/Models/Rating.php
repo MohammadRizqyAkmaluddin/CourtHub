@@ -9,15 +9,12 @@ class Rating extends Model
     protected $table = 'ratings';
 
     protected $fillable = [
-        'user_id',
-        'venue_id',
-        'rate'
+        'booking_id',
+        'rate',
+        'review',
     ];
 
-    public function user() {
-        return $this->belongsTo(User::class);
-    }
-    public function venue() {
-        return $this->belongsTo(Venue::class);
+    public function booking() {
+        return $this->hasMany(Booking::class);
     }
 }

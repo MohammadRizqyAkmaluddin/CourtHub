@@ -32,9 +32,6 @@ class Venue extends Authenticatable
     public function court() {
         return $this->hasMany(Court::class);
     }
-    public function courtBooking() {
-        return $this->hasMany(CourtBooking::class);
-    }
     public function images() {
         return $this->hasMany(VenueImage::class);
     }
@@ -42,10 +39,21 @@ class Venue extends Authenticatable
     {
         return $this->hasOne(VenueImage::class)->oldestOfMany();
     }
-    public function rating() {
-        return $this->hasMany(Rating::class);
-    }
     public function community() {
         return $this->hasMany(Community::class);
     }
+    public function booking() {
+        return $this->hasMany(Booking::class);
+    }
+    public function ratings()
+{
+    return $this->hasManyThrough(
+        Rating::class,
+        Booking::class,
+        'venue_id',     // foreign key di bookings
+        'booking_id',   // foreign key di ratings
+        'id',           // local key di venues
+        'id'            // local key di bookings
+    );
+}
 }

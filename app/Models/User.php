@@ -17,20 +17,17 @@ class User extends Authenticatable
 
     protected $hidden = ['password'];
 
-    public function courtBooking() {
-        return $this->hasMany(CourtBooking::class);
-    }
     public function city() {
         return $this->belongsTo(City::class);
-    }
-    public function rating() {
-        return $this->hasMany(Rating::class);
     }
     public function community() {
         return $this->hasMany(Community::class);
     }
     public function member() {
         return $this->hasMany(CommunityMember::class);
+    }
+    public function level() {
+        return $this->hasMany(ActivityLevel::class);
     }
 
     protected $appends = ['profile_image_url'];

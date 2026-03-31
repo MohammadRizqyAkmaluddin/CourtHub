@@ -25,4 +25,16 @@ class Booking extends Model
     public function sessions() {
         return $this->hasMany(BookingSession::class);
     }
+    public function venue() {
+        return $this->belongsTo(Venue::class);
+    }
+    public function court() {
+        return $this->belongsTo(Court::class);
+    }
+    public function user() {
+        return $this->belongsTo(User::class);
+    }
+    public function rating() {
+        return $this->hasOne(Rating::class);
+    }
 }

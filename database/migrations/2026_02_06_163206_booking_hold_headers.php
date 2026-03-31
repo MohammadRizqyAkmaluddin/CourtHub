@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('midtrans_order_id')->nullable()->unique();
             $table->string('snap_token')->nullable();
             $table->string('payment_status')->default('hold');
-            $table->datetime('expires_at');
+            $table->datetime('expires_at')->nullable();
             $table->timestamps();
             $table->engine = 'InnoDB';
         });

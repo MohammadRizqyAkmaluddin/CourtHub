@@ -31,7 +31,9 @@ class VenueController extends Controller
             }
         ])
         ->withCount('court')
-        ->withMin('court', 'price');
+        ->withMin('court', 'price')
+        ->withAvg('ratings as avg_rating', 'rate')
+        ->withCount('ratings as total_reviews');
 
         if ($request->filled('search')) {
             $query->where('name', 'LIKE', '%' . $request->search . '%');
@@ -47,7 +49,17 @@ class VenueController extends Controller
             });
         }
 
-        return response()->json($query->paginate($perPage));
+        $venues = $query->paginate($perPage);
+
+        $venues->getCollection()->transform(function ($venue) {
+            $venue->avg_rating = $venue->avg_rating
+                ? number_format((float) $venue->avg_rating, 1)
+                : 0;
+
+            return $venue;
+        });
+
+        return response()->json($venues);
     }
 
     public function show(Venue $venue)
@@ -57,10 +69,27 @@ class VenueController extends Controller
             'city:id,city,province',
             'images:id,venue_id,image',
             'court.sportType:id,type',
-            'rating.user'
+            'booking' => function ($q) {
+                $q->select('id', 'venue_id', 'court_id', 'user_id', 'price')
+                  ->whereHas('rating')
+                  ->with([
+                    'user:id,name,profile_image',
+                    'rating:id,booking_id,rate,review,updated_at',
+                    'court:id,name'
+                  ]);
+            }
         ]);
 
-        return response()->json($venue);
+        $venue->loadAvg('ratings as avg_rating', 'rate');
+        $venue->avg_rating = number_format((float) $venue->avg_rating, 1);
+        $venue->loadCount('ratings as total_reviews');
+
+        $venue->avg_rating = $venue->avg_rating ?? 0;
+
+        return response()->json([
+            'success' => true,
+            'data'   => $venue
+        ]);
     }
 
     public function me(Request $request)
