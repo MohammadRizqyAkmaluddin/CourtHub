@@ -18,12 +18,16 @@ use App\Http\Controllers\Api\CSM\SettingController;
 use App\Http\Controllers\Api\CSM\StoreProductController;
 use App\Http\Controllers\Api\RatingController;
 use App\Http\Controllers\Api\CSM\VenueManagementController;
+use App\Http\Controllers\AI\SupportChatController;
 use Illuminate\Http\Request;
 
 Route::get('/test', function () {
     return 'API OK';
 });
 
+
+
+Route::post('/ai/support-chat', [SupportChatController::class, 'chat']);
 Route::get('sport-types', [LookupController::class, 'sportType']);
 Route::get('court-types', [LookupController::class, 'courtType']);
 Route::get('court-material', [LookupController::class, 'courtMaterial']);
